@@ -5,8 +5,12 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin') // 提取css到�
 const ESLintPlugin = require('eslint-webpack-plugin')
 const TerserPlugin = require('terser-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
-const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin')
 const { presetCssLoader } = require('./util/util')
+const  { VueLoaderPlugin } =require('vue-loader')
+const {DefinePlugin} = require('webpack')
+const AutoImport = require('unplugin-auto-import/webpack')
+const Components = require('unplugin-vue-components/webpack')
+const { ElementPlusResolver } = require('unplugin-vue-components/resolvers')
 
 const isProduction = process.env.NODE_ENV === 'production'
 
@@ -15,7 +19,7 @@ module.exports = {
   entry: './src/index.js', // webpack解析模块加载
   resolve: {
     // 自动补全扩展名
-    extensions: ['.jsx', '.js', '.json']
+    extensions: ['.vue', '.js', '.json']
   },
   output: {
     filename: 'static/js/[name].[contenthash:10].js',
@@ -24,7 +28,7 @@ module.exports = {
     assetModuleFilename: 'static/media/[hash:10][ext][query]',
     clean: true
   },
-  devtool: isProduction ? 'none' : 'cheap-module-source-map',
+  devtool: isProduction ? undefined : 'cheap-module-source-map',
   devServer: {
     port: 3000,
     historyApiFallback: true,
@@ -66,12 +70,18 @@ module.exports = {
         type: 'asset/resource'
       }, // js
       {
-        test: /\.[jt]sx?$/,
+        test: /\.[jt]s?$/,
         exclude: /(node_modules|bower_components)/,
         loader: 'babel-loader',
         options: {
           cacheDirectory: true, // 开启缓存，优化打包速度
-          plugins: [!isProduction && 'react-refresh/babel'].filter(Boolean) // react热更新插件
+        }
+      },
+      {
+        test: /\.vue$/,
+        loader: 'vue-loader',
+        options: {
+          cacheDirectory: path.resolve(__dirname, "../node_modules/.cache/vue-loader")
         }
       }
     ]
@@ -106,10 +116,18 @@ module.exports = {
           }
         ]
       }),
-    !isProduction &&
-      new ReactRefreshWebpackPlugin({
-        overlay: false
-      })
+    new VueLoaderPlugin(),
+    new DefinePlugin({
+      __VUE_OPTIONS_API__: "true",
+      __VUE_PROD_DEVTOOLS__: "false",
+    }),
+    AutoImport({
+      resolvers: [ElementPlusResolver()],
+    }),
+    Components({
+      resolvers: [ElementPlusResolver()],
+    }),
+
   ].filter(Boolean),
   // 优化器
   optimization: {
@@ -118,20 +136,20 @@ module.exports = {
     splitChunks: {
       chunks: 'all',
       cacheGroups: {
-        react: {
-          test: /[\\/]node_modules[\\/]react(.*)?/,
-          name: 'chunk-react',
-          priority: 40 // 优先级
+        "vue":{
+          test: /[\\/]node_modules[\\/]vue(.*)?/,
+          name: 'vue-chunk',
+          priority: 40
         },
-        antd: {
-          test: /[\\/]node_modules[\\/]antd[\\/]/,
-          name: 'chunk-antd',
-          priority: 30
+        "element":{
+          priority: 30,
+          test: /[\\/]node_modules[\\/]element-plus[\\/]/,
+          name: 'element-chunk'
         },
-        libs: {
+        "libs":{
+          priority: 20,
           test: /[\\/]node_modules[\\/]/,
-          name: 'chunk-libs',
-          priority: 20
+          name: 'libs-chunk'
         }
       }
     },

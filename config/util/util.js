@@ -7,7 +7,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin') // 把css提取�
  */
 function presetCssLoader(inputLoader = '') {
   return [
-    'vue-style-loader',
+    MiniCssExtractPlugin.loader,
     'css-loader',
     'postcss-loader',
     inputLoader

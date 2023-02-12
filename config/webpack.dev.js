@@ -95,7 +95,7 @@ module.exports = {
       )
     }),
     new VueLoaderPlugin(),
-     new DefinePlugin({
+    new DefinePlugin({
       __VUE_OPTIONS_API__: "true",
       __VUE_PROD_DEVTOOLS__: "false",
     }),
@@ -112,7 +112,7 @@ module.exports = {
       })
   ],
   optimization: {
-    minimize: true,
+    minimize: false,
     splitChunks: {
       chunks: 'all'
     },

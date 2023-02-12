@@ -5,6 +5,8 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin') // 提取css到�
 const ESLintPlugin = require('eslint-webpack-plugin')
 const TerserPlugin = require('terser-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
+const  { VueLoaderPlugin } =require('vue-loader')
+const {DefinePlugin} = require('webpack')
 const { presetCssLoader } = require('./util/util')
 
 module.exports = {
@@ -12,7 +14,7 @@ module.exports = {
   entry: './src/index.js', // webpack解析模块加载
   resolve: {
     // 自动补全扩展名
-    extensions: ['.jsx', '.js', '.json']
+    extensions: ['.vue', '.js', '.json']
   },
   output: {
     filename: 'static/js/[name].[contenthash:10].js',
@@ -21,7 +23,6 @@ module.exports = {
     assetModuleFilename: 'static/media/[hash:10][ext][query]',
     clean: true
   },
-  devtool: 'source-map',
   module: {
     rules: [
       // css
@@ -55,12 +56,16 @@ module.exports = {
         type: 'asset/resource'
       }, // js
       {
-        test: /\.[jt]sx?$/,
+        test: /\.[jt]s?$/,
         exclude: /(node_modules|bower_components)/,
         loader: 'babel-loader',
         options: {
           cacheDirectory: true // 开启缓存，优化打包速度
         }
+      },
+      {
+        test: /\.vue$/,
+        loader: 'vue-loader'
       }
     ]
   },
@@ -82,6 +87,11 @@ module.exports = {
         '../node_modules/.cache/.eslintcache'
       )
     }),
+    new VueLoaderPlugin(),
+    new DefinePlugin({
+      __VUE_OPTIONS_API__: "true",
+      __VUE_PROD_DEVTOOLS__: "false",
+    }),
     new CopyWebpackPlugin({
       patterns: [
         {
@@ -99,7 +109,19 @@ module.exports = {
     minimize: true,
     minimizer: [new CssMinimizerPlugin(), new TerserPlugin()],
     splitChunks: {
-      chunks: 'all'
+      chunks: 'all',
+      cacheGroups: {
+        "vue":{
+          test: /[\\/]node_modules[\\/]vue(.*)?/,
+          name: 'vue-chunk.js',
+          priority: 40
+        },
+        libs:{
+          priority: 30,
+          test: /[\\/]node_modules[\\/]$/,
+          name: 'libs-chunk.js'
+        }
+      }
     },
     // 缓存
     runtimeChunk: {
