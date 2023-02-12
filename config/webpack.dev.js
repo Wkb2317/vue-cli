@@ -5,6 +5,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin') // 提取css到�
 const ESLintPlugin = require('eslint-webpack-plugin')
 const  { VueLoaderPlugin } =require('vue-loader') 
 const {DefinePlugin} = require('webpack')
+const CopyWebpackplugin = require("copy-webpack-plugin")
 
 const { presetCssLoader } = require('./util/util')
 
@@ -98,6 +99,17 @@ module.exports = {
       __VUE_OPTIONS_API__: "true",
       __VUE_PROD_DEVTOOLS__: "false",
     }),
+      new CopyWebpackplugin({
+        patterns: [
+          {
+            from: "public",
+            to: "dist",
+            globOptions:{
+              ignore: ["**/index.html"]
+            }
+          },
+        ],
+      })
   ],
   optimization: {
     minimize: true,
